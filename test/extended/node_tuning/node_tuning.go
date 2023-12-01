@@ -147,15 +147,15 @@ var _ = g.Describe("[sig-node-tuning] NTO should", func() {
 		pools, err := mcps.List(context.Background(), metav1.ListOptions{})
 		o.Expect(err).NotTo(o.HaveOccurred())
 		for _, p := range pools.Items {
-			err = assertIfSpecifiedMCPSKeepUpdatedStateWithRetry(mcps, p.GetName())
+			err = assertIfSpecifiedMCPWithUpdatedStateWithRetry(mcps, p.GetName())
 			o.Expect(err).NotTo(o.HaveOccurred())
 		}
 
 		e2e.Logf("assert if the status of co machine-config is availabe state")
-		err = assertIfSpecifiedCOKeepAvailableStateWithRetry(oc, "machine-config")
+		err = assertIfSpecifiedCOWithAvailableStateWithRetry(oc, "machine-config")
 		o.Expect(err).NotTo(o.HaveOccurred())
 		e2e.Logf("assert if the status of co node-tuning is availabe state")
-		err = assertIfSpecifiedCOKeepAvailableStateWithRetry(oc, "node-tuning")
+		err = assertIfSpecifiedCOWithAvailableStateWithRetry(oc, "node-tuning")
 		o.Expect(err).NotTo(o.HaveOccurred())
 
 		kf := oc.KubeFramework()

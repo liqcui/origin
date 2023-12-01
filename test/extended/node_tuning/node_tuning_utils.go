@@ -34,20 +34,10 @@ func isSNOCluster(oc *exutil.CLI) (bool, error) {
 
 func getFirstMasterNode(ctx context.Context, nodeClient v1.NodeInterface) (*corev1.Node, error) {
 	masterNodes, err := nodeClient.List(ctx, metav1.ListOptions{LabelSelector: masterNodeRoleLabel})
-	if err != nil && len(masterNodes.Items) == 0 {
+	if err != nil || len(masterNodes.Items) == 0 {
 		e2e.Logf("failed to list master nodes %v", err)
 		return nil, err
 	}
-
-	e2e.Logf("masterNodes.Items[0] %v", masterNodes.Items[0])
-	// var firstMasterNode *corev1.Node
-	// for i, masterNode := range masterNodes.Items {
-	// 	if i == 0 {
-	// 		firstMasterNode = &masterNode
-	// 		e2e.Logf("the first masterNode is %v", masterNode.Name)
-	// 		break
-	// 	}
-	// }
 	return &masterNodes.Items[0], err
 }
 
@@ -156,8 +146,9 @@ func findCondition(conditions []configv1.ClusterOperatorStatusCondition, name co
 	return nil
 }
 
-// wait for 5 minutes and check co stay on avaible state, just in case ocp upgrade scenario or node reboot/scale out that caused by other test case.
-func assertIfSpecifiedCOKeepAvailableStateWithRetry(oc *exutil.CLI, coName string) error {
+// try to check if CO status is available with multiple retry, the maxinum is 5 times, re-try one time each minutes.
+// just in case the co status become degraded or processing during ocp upgrade scenario or node reboot/scale out.
+func assertIfSpecifiedCOWithAvailableStateWithRetry(oc *exutil.CLI, coName string) error {
 	errWait := wait.Poll(1*time.Minute, 5*time.Minute, func() (bool, error) {
 		isCOAvailable, err := isCOAvailableState(oc, coName)
 		if err != nil {
@@ -207,9 +198,9 @@ func isCOAvailableState(oc *exutil.CLI, coName string) (bool, error) {
 	return isAvailable, nil
 }
 
-// wait for 10 minutes and check mcp master/worker mcp stay on updated state
-// just in case other test case cause node reboot/scale out or update during execute this test case
-func assertIfSpecifiedMCPSKeepUpdatedStateWithRetry(mcps dynamic.NamespaceableResourceInterface, mcpName string) error {
+// retry to check if mcp master/worker mcp is on updated state, the maxinum is 10 times, re-try one time each minutes
+// just in case the mcp state become updating during ocp upgrade or node reboot/scale out or other test case change mcp
+func assertIfSpecifiedMCPWithUpdatedStateWithRetry(mcps dynamic.NamespaceableResourceInterface, mcpName string) error {
 	errWait := wait.Poll(1*time.Minute, 10*time.Minute, func() (bool, error) {
 		updated, updating := isPoolUpdated(mcps, mcpName)
 		if updated && !updating {
