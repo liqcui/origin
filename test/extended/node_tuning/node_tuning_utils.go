@@ -189,7 +189,7 @@ func isCOAvailableState(oc *exutil.CLI, coName string) (bool, error) {
 	degraded := findCondition(co.Status.Conditions, configv1.OperatorDegraded)
 	progressing := findCondition(co.Status.Conditions, configv1.OperatorProgressing)
 	e2e.Logf("the status of co %v is available.Status [%v] degraded.Status [%v] and progressing.Status [%v]", coName, available.Status, degraded.Status, progressing.Status)
-	if available.Status != configv1.ConditionTrue &&
+	if available.Status == configv1.ConditionTrue &&
 		degraded.Status == configv1.ConditionFalse &&
 		progressing.Status == configv1.ConditionFalse {
 		isAvailable = true
