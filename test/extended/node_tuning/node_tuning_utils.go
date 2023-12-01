@@ -34,9 +34,12 @@ func isSNOCluster(oc *exutil.CLI) (bool, error) {
 
 func getFirstMasterNode(ctx context.Context, nodeClient v1.NodeInterface) (*corev1.Node, error) {
 	masterNodes, err := nodeClient.List(ctx, metav1.ListOptions{LabelSelector: masterNodeRoleLabel})
-	if err != nil {
-		fmt.Printf("failed to list master nodes:'%v'", err)
+	if err != nil && len(masterNodes.Items) == 0 {
+		e2e.Logf("failed to list master nodes %v", err)
+		return nil, err
 	}
+
+	e2e.Logf("masterNodes %v", masterNodes)
 	var firstMasterNode *corev1.Node
 	for i, masterNode := range masterNodes.Items {
 		if i == 0 {
@@ -167,7 +170,6 @@ func assertIfSpecifiedCOKeepAvailableStateWithRetry(oc *exutil.CLI, coName strin
 		e2e.Logf("the status of co %v doesn't stay on expected state, will check again", coName)
 		return false, nil
 	})
-	//err := assertWaitPollNoErr(errWait, "the status of co keep unexpected state")
 	return errWait
 }
 
@@ -218,25 +220,5 @@ func assertIfSpecifiedMCPSKeepUpdatedStateWithRetry(mcps dynamic.NamespaceableRe
 		e2e.Logf("the status of mcp is updated - [%v] updating - [%v]", updated, updating)
 		return false, nil
 	})
-	//err := assertWaitPollNoErr(errWait, "the status of mcp keep unexpected state")
 	return errWait
-}
-
-// e is return value of Wait.Poll
-// msg is the reason why time out
-// the function assert return value of Wait.Poll, and expect NO error
-// if e is Nil, just pass and nothing happen.
-// if e is not Nil, will not print the default error message "timed out waiting for the condition" because it causes RP AA not to analysis result exactly.
-// if e is "timed out waiting for the condition" or "context deadline exceeded", it is replaced by msg.
-// if e is not "timed out waiting for the condition", it print e and then case fails.
-func assertWaitPollNoErr(e error, msg string) error {
-	var err error
-	if e == nil {
-		return nil
-	} else if e != nil && (strings.Compare(e.Error(), "timed out waiting for the condition") == 0 || strings.Compare(e.Error(), "context deadline exceeded") == 0) {
-		err = fmt.Errorf("case: error: %s", msg)
-	} else {
-		err = fmt.Errorf("case: error: %s", e.Error())
-	}
-	return err
 }

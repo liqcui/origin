@@ -164,7 +164,7 @@ var _ = g.Describe("[sig-node-tuning] NTO should", func() {
 		e2e.Logf("get pod logs for %v", mcpConfigDaemonset.Name)
 		podLogsStdout, err := getPodLogsLastLines(context.Background(), oc.KubeClient(), "openshift-machine-config-operator", mcpConfigDaemonset.Name, "machine-config-daemon", 20)
 		o.Expect(err).NotTo(o.HaveOccurred())
-		e2e.Logf("check if the log of %v contains keyword [Marking Degraded due to|not found]", mcpConfigDaemonset.Name)
+		e2e.Logf("check if the log of %v contains keyword [marking degraded due to|not found]", mcpConfigDaemonset.Name)
 		logAssertResult, err := podLogsMatch(mcpConfigDaemonset.Name, podLogsStdout, "Marking Degraded due to|not found")
 		o.Expect(err).NotTo(o.HaveOccurred())
 		o.Expect(logAssertResult).To(o.BeFalse())
