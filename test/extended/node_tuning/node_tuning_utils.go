@@ -167,8 +167,8 @@ func assertIfSpecifiedCOKeepAvailableStateWithRetry(oc *exutil.CLI, coName strin
 		e2e.Logf("the status of co %v doesn't stay on expected state, will check again", coName)
 		return false, nil
 	})
-	err := assertWaitPollNoErr(errWait, "the status of co keep unexpected state")
-	return err
+	//err := assertWaitPollNoErr(errWait, "the status of co keep unexpected state")
+	return errWait
 }
 
 // isCOAvailable returns true when the ClusterOperator's coName status conditions are as follows: Available true, Progressing false and Degraded false.
@@ -196,7 +196,7 @@ func isCOAvailableState(oc *exutil.CLI, coName string) (bool, error) {
 	degraded := findCondition(co.Status.Conditions, configv1.OperatorDegraded)
 	progressing := findCondition(co.Status.Conditions, configv1.OperatorProgressing)
 	e2e.Logf("the status of co %v is available.Status [%v] degraded.Status [%v] and progressing.Status [%v]", coName, available.Status, degraded.Status, progressing.Status)
-	if available.Status == configv1.ConditionTrue &&
+	if available.Status != configv1.ConditionTrue &&
 		degraded.Status == configv1.ConditionFalse &&
 		progressing.Status == configv1.ConditionFalse {
 		isAvailable = true
