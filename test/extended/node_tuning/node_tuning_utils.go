@@ -40,15 +40,15 @@ func getFirstMasterNode(ctx context.Context, nodeClient v1.NodeInterface) (*core
 	}
 
 	e2e.Logf("masterNodes.Items[0] %v", masterNodes.Items[0])
-	var firstMasterNode *corev1.Node
-	for i, masterNode := range masterNodes.Items {
-		if i == 0 {
-			firstMasterNode = &masterNode
-			e2e.Logf("the first masterNode is %v", masterNode.Name)
-			break
-		}
-	}
-	return firstMasterNode, err
+	// var firstMasterNode *corev1.Node
+	// for i, masterNode := range masterNodes.Items {
+	// 	if i == 0 {
+	// 		firstMasterNode = &masterNode
+	// 		e2e.Logf("the first masterNode is %v", masterNode.Name)
+	// 		break
+	// 	}
+	// }
+	return &masterNodes.Items[0], err
 }
 
 func podLogsMatch(podName string, podLogs string, filter string) (bool, error) {
