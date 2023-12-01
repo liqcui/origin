@@ -132,7 +132,7 @@ var _ = g.Describe("[sig-node-tuning] NTO should", func() {
 
 		ctx := context.TODO()
 		nodeClient := oc.KubeClient().CoreV1().Nodes()
-		firstMasterNodeName, err := getFirstMasterNode(ctx, nodeClient)
+		firstMasterNode, err := getFirstMasterNode(ctx, nodeClient)
 		o.Expect(err).NotTo(o.HaveOccurred())
 
 		e2e.Logf("assert if the status of mcp master keep on updated state")
@@ -159,13 +159,12 @@ var _ = g.Describe("[sig-node-tuning] NTO should", func() {
 		o.Expect(err).NotTo(o.HaveOccurred())
 
 		kf := oc.KubeFramework()
-		mcpConfigDaemonset, _ = exutil.GetMachineConfigDaemonByNode(kf.ClientSet, firstMasterNodeName)
-		e2e.Logf("mcpConfigDaemonsetPodName %v", mcpConfigDaemonset.Name)
+		mcpConfigDaemonset, _ = exutil.GetMachineConfigDaemonByNode(kf.ClientSet, firstMasterNode)
 		o.Expect(err).NotTo(o.HaveOccurred())
-		e2e.Logf("Get pod logs for %v", mcpConfigDaemonset.Name)
+		e2e.Logf("get pod logs for %v", mcpConfigDaemonset.Name)
 		podLogsStdout, err := getPodLogsLastLines(context.Background(), oc.KubeClient(), "openshift-machine-config-operator", mcpConfigDaemonset.Name, "machine-config-daemon", 20)
 		o.Expect(err).NotTo(o.HaveOccurred())
-		e2e.Logf("Check if the log of %v contains keyword [Marking Degraded due to|not found]", mcpConfigDaemonset.Name)
+		e2e.Logf("check if the log of %v contains keyword [Marking Degraded due to|not found]", mcpConfigDaemonset.Name)
 		logAssertResult, err := podLogsMatch(mcpConfigDaemonset.Name, podLogsStdout, "Marking Degraded due to|not found")
 		o.Expect(err).NotTo(o.HaveOccurred())
 		o.Expect(logAssertResult).To(o.BeFalse())

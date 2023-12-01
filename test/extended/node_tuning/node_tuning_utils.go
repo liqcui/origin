@@ -37,15 +37,15 @@ func getFirstMasterNode(ctx context.Context, nodeClient v1.NodeInterface) (*core
 	if err != nil {
 		fmt.Printf("failed to list master nodes:'%v'", err)
 	}
-	var firstMasterName *corev1.Node
+	var firstMasterNode *corev1.Node
 	for i, masterNode := range masterNodes.Items {
 		if i == 0 {
-			firstMasterName = &masterNode
+			firstMasterNode = &masterNode
 			e2e.Logf("the first masterNode is %v", masterNode.Name)
 			break
 		}
 	}
-	return firstMasterName, err
+	return firstMasterNode, err
 }
 
 func podLogsMatch(podName string, podLogs string, filter string) (bool, error) {
@@ -134,13 +134,13 @@ func isPoolUpdated(dc dynamic.NamespaceableResourceInterface, name string) (pool
 		}
 	}
 	if paused {
-		e2e.Logf("Pool %s is paused, treating as up-to-date (Updated: %v, Updating: %v, Degraded: %v)", name, updated, updating, degraded)
+		e2e.Logf("pool %s is paused, treating as up-to-date (updated: %v, updating: %v, degraded: %v)", name, updated, updating, degraded)
 		return true, updating
 	}
 	if updated && !updating && !degraded {
 		return true, updating
 	}
-	e2e.Logf("Pool %s is still reporting (Updated: %v, Updating: %v, Degraded: %v)", name, updated, updating, degraded)
+	e2e.Logf("pool %s is still reporting (updated: %v, updating: %v, degraded: %v)", name, updated, updating, degraded)
 	return false, updating
 }
 
@@ -195,7 +195,7 @@ func isCOAvailableState(oc *exutil.CLI, coName string) (bool, error) {
 	available := findCondition(co.Status.Conditions, configv1.OperatorAvailable)
 	degraded := findCondition(co.Status.Conditions, configv1.OperatorDegraded)
 	progressing := findCondition(co.Status.Conditions, configv1.OperatorProgressing)
-	e2e.Logf("the status of co %v is: available.Status [%v] degraded.Status [%v] and progressing.Status [%v]", coName, available.Status, degraded.Status, progressing.Status)
+	e2e.Logf("the status of co %v is available.Status [%v] degraded.Status [%v] and progressing.Status [%v]", coName, available.Status, degraded.Status, progressing.Status)
 	if available.Status == configv1.ConditionTrue &&
 		degraded.Status == configv1.ConditionFalse &&
 		progressing.Status == configv1.ConditionFalse {
@@ -209,17 +209,17 @@ func isCOAvailableState(oc *exutil.CLI, coName string) (bool, error) {
 // just in case other test case cause node reboot/scale out or update during execute this test case
 func assertIfSpecifiedMCPSKeepUpdatedStateWithRetry(mcps dynamic.NamespaceableResourceInterface, mcpName string) error {
 	errWait := wait.Poll(1*time.Minute, 10*time.Minute, func() (bool, error) {
-		updated, Updating := isPoolUpdated(mcps, mcpName)
-		if updated && !Updating {
+		updated, updating := isPoolUpdated(mcps, mcpName)
+		if updated && !updating {
 			e2e.Logf("the status of mcp %v is updated state, not updating", mcpName)
 			return true, nil
 		}
 		e2e.Logf("the status of mcp %v is updating or degraded state, will check again")
-		e2e.Logf("the status of mcp is : updated - [%v] updating - [%v]", updated, Updating)
+		e2e.Logf("the status of mcp is updated - [%v] updating - [%v]", updated, updating)
 		return false, nil
 	})
-	err := assertWaitPollNoErr(errWait, "the status of mcp keep unexpected state")
-	return err
+	//err := assertWaitPollNoErr(errWait, "the status of mcp keep unexpected state")
+	return errWait
 }
 
 // e is return value of Wait.Poll
@@ -234,9 +234,9 @@ func assertWaitPollNoErr(e error, msg string) error {
 	if e == nil {
 		return nil
 	} else if e != nil && (strings.Compare(e.Error(), "timed out waiting for the condition") == 0 || strings.Compare(e.Error(), "context deadline exceeded") == 0) {
-		err = fmt.Errorf("case: nerror: %s", msg)
+		err = fmt.Errorf("case: error: %s", msg)
 	} else {
-		err = fmt.Errorf("case: nerror: %s", e.Error())
+		err = fmt.Errorf("case: error: %s", e.Error())
 	}
 	return err
 }
