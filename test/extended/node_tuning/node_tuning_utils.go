@@ -39,7 +39,7 @@ func getFirstMasterNode(ctx context.Context, nodeClient v1.NodeInterface) (*core
 		return nil, err
 	}
 
-	e2e.Logf("masterNodes %v", masterNodes)
+	e2e.Logf("masterNodes.Items[0] %v", masterNodes.Items[0])
 	var firstMasterNode *corev1.Node
 	for i, masterNode := range masterNodes.Items {
 		if i == 0 {
